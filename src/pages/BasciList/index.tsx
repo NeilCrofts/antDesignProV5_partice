@@ -1,8 +1,10 @@
 import React,{useState,useEffect} from 'react';
-import { Table, Row,Col,Card,Button,Pagination,Space} from 'antd';
+import { Table, Row,Col,Card,Button,Pagination,Space,Tag} from 'antd';
+import moment from 'moment'
 import { PageContainer} from '@ant-design/pro-layout';
 import {useRequest} from 'umi'
 import style from './index.less'
+import { values } from 'lodash';
 
 const Index=()=>{
   const [page,setPage] = useState(1)//设置当前页数和函数名setPage
@@ -60,6 +62,39 @@ const Index=()=>{
       </Row>
     )
   };
+  const columnsBuilder=()=>{
+
+      // [{title:'ID',dataIndex:'id',key:'id'}]
+      // .concat(init?.data?.layout?.tableColumn
+      // .filter((item)=>item.hideInColumn!==true)||[]
+      // )
+      const newCloumns:any[] =[];
+      (init?.data?.layout?.tableColumn||[]).forEach((column)=>{
+        if(column.hideInColumn!==true){
+          //修改时间格式
+          if(column.type==='datetime'){
+            //对遍历的column加工并返回
+            column.render = (value:any)=>{
+              return moment(value).format('YYYY-MM-DD HH:mm:ss');
+            }
+          }
+          //修改状态state
+          if(column.type==='switch'){
+            column.render=(value:any)=>{
+              const option = (column.data||[]).find((item)=>{
+                return item.value===value
+              })
+              return <Tag>{option?.title}</Tag>
+            }
+          }
+
+
+          newCloumns.push(column)
+        }
+    })
+    return newCloumns
+
+  }
     return (
     <PageContainer>
       {searchLayout()}
@@ -67,7 +102,7 @@ const Index=()=>{
         {beforeTableLayout()}
         <Table
           dataSource={init?.data?.dataSource}
-          columns={init?.data?.layout?.tableColumn.filter((item)=>item.hideInColumn!==true)}
+          columns={columnsBuilder()}
           pagination={false}/>
         {afterTableLayout()}
       </Card>
