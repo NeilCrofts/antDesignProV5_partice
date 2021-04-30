@@ -1,8 +1,9 @@
 import React,{useState,useEffect} from 'react';
 import { Table, Row,Col,Card,Button,Pagination,Space,Tag} from 'antd';
-import moment from 'moment'
 import { PageContainer} from '@ant-design/pro-layout';
 import {useRequest} from 'umi'
+import ActionBuilder from './builder/ActionBuilder'
+import ColumnBuilder from './builder/ColumnBuilder'
 import style from './index.less'
 
 const Index=()=>{
@@ -19,14 +20,6 @@ const Index=()=>{
     init.run()
   },[page,per_page])
 
-  const actionBuilder = (actions:BasicListApi.Action[] | undefined)=>{
-    return (actions||[]).map((action)=>{
-      if(action.component === 'button'){
-        return <Button type={action.type}>{action.text}</Button>
-      }
-      return null
-    })
-  }
 
   //页面头部
   const searchLayout =()=>{};
@@ -36,7 +29,7 @@ const Index=()=>{
         <Col span={12}>...</Col>
         <Col span={12} className={style.tableToobar}>
           <Space>
-            {actionBuilder(init?.data?.layout?.tableToolBar)}
+            {ActionBuilder(init?.data?.layout?.tableToolBar)}
           </Space>
         </Col>
       </Row>
@@ -70,40 +63,7 @@ const Index=()=>{
     )
   };
 
-  //列表内容
-  const columnsBuilder=()=>{
-      const newCloumns:any[] =[];
-      //dataSourse的数据是在tableColumn中处理的
-      (init?.data?.layout?.tableColumn||[]).forEach((column)=>{
-        if(column.hideInColumn!==true){
-          switch(column.type){
-            //修改时间格式
-            case 'datetime':
-              //.render 对column的数据加工返回 参数value为dataSourse的每一项
-              column.render = (value:any)=>moment(value).format('YYYY-MM-DD HH:mm:ss');
-              break;
-            //修改状态state
-            case 'switch':
-              column.render=(value:any)=>{
-                const option = (column.data||[]).find((item)=>item.value===value)
-                return <Tag color={value ? 'blue' : 'red'}>{option?.title}</Tag>
-              }
-              break;
-            case 'actions':
-              column.render=(value:any)=>{
-                return <Space>{actionBuilder(column.actions)}</Space>
-              }
-            break;
 
-            default:
-              break;
-          }
-          newCloumns.push(column)
-        }
-    })
-    return newCloumns
-
-  }
     return (
     <PageContainer>
       {searchLayout()}
@@ -111,7 +71,7 @@ const Index=()=>{
         {beforeTableLayout()}
         <Table
           dataSource={init?.data?.dataSource}
-          columns={columnsBuilder()}
+          columns={ColumnBuilder(init?.data?.layout?.tableColumn)}
           pagination={false}/>
         {afterTableLayout()}
       </Card>
