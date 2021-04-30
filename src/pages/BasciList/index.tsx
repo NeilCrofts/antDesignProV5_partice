@@ -4,7 +4,6 @@ import moment from 'moment'
 import { PageContainer} from '@ant-design/pro-layout';
 import {useRequest} from 'umi'
 import style from './index.less'
-import { values } from 'lodash';
 
 const Index=()=>{
   const [page,setPage] = useState(1)//设置当前页数和函数名setPage
@@ -63,32 +62,24 @@ const Index=()=>{
     )
   };
   const columnsBuilder=()=>{
-
-      // [{title:'ID',dataIndex:'id',key:'id'}]
-      // .concat(init?.data?.layout?.tableColumn
-      // .filter((item)=>item.hideInColumn!==true)||[]
-      // )
       const newCloumns:any[] =[];
+      //dataSourse的数据是在tableColumn中处理的
       (init?.data?.layout?.tableColumn||[]).forEach((column)=>{
         if(column.hideInColumn!==true){
-          //修改时间格式
-          if(column.type==='datetime'){
-            //对遍历的column加工并返回
-            column.render = (value:any)=>{
-              return moment(value).format('YYYY-MM-DD HH:mm:ss');
-            }
+          switch(column.type){
+            //修改时间格式
+            case 'datetime':
+              //.render 对column的数据加工返回 参数value为dataSourse的每一项
+              column.render = (value:any)=>moment(value).format('YYYY-MM-DD HH:mm:ss');
+              break;
+            //修改状态state
+            case 'switch':
+              column.render=(value:any)=>{
+                const option = (column.data||[]).find((item)=>item.value===value)
+                return <Tag color={value ? 'blue' : 'red'}>{option?.title}</Tag>
+              }
+              break;
           }
-          //修改状态state
-          if(column.type==='switch'){
-            column.render=(value:any)=>{
-              const option = (column.data||[]).find((item)=>{
-                return item.value===value
-              })
-              return <Tag>{option?.title}</Tag>
-            }
-          }
-
-
           newCloumns.push(column)
         }
     })
