@@ -19,6 +19,15 @@ const Index=()=>{
     init.run()
   },[page,per_page])
 
+  const actionBuilder = (actions:BasicListApi.Action[] | undefined)=>{
+    return (actions||[]).map((action)=>{
+      if(action.component === 'button'){
+        return <Button type={action.type}>{action.text}</Button>
+      }
+      return null
+    })
+  }
+
   //页面头部
   const searchLayout =()=>{};
   const beforeTableLayout =()=>{
@@ -27,8 +36,7 @@ const Index=()=>{
         <Col span={12}>...</Col>
         <Col span={12} className={style.tableToobar}>
           <Space>
-            <Button type="primary">添加</Button>
-            <Button type="primary">删除</Button>
+            {actionBuilder(init?.data?.layout?.tableToolBar)}
           </Space>
         </Col>
       </Row>
@@ -61,6 +69,8 @@ const Index=()=>{
       </Row>
     )
   };
+
+  //列表内容
   const columnsBuilder=()=>{
       const newCloumns:any[] =[];
       //dataSourse的数据是在tableColumn中处理的
@@ -78,6 +88,14 @@ const Index=()=>{
                 const option = (column.data||[]).find((item)=>item.value===value)
                 return <Tag color={value ? 'blue' : 'red'}>{option?.title}</Tag>
               }
+              break;
+            case 'actions':
+              column.render=(value:any)=>{
+                return <Space>{actionBuilder(column.actions)}</Space>
+              }
+            break;
+
+            default:
               break;
           }
           newCloumns.push(column)
