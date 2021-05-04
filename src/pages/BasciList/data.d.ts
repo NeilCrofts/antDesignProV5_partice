@@ -35,10 +35,10 @@ declare module BasicListApi {
       type?: string;
       data?: Datum[];
       hideInColumn?: boolean;
-      sorter?: boolean;
+      sorter?: any;
       mode?: string;
       actions?: Action[];
-      [key:string]:any;
+      [key: string]: any;
   }
 
   export interface Layout {
