@@ -36,11 +36,12 @@ const columnsBuilder=(tableColumn: BasicListApi.TableColumn[] | undefined) => {
       newCloumns.push(column);
     }
   });
-  const idCloumn = [
+  const idCloumn: BasicListApi.TableColumn[]= [
     {
       title: 'ID',
       dataIndex: 'id',
       key: 'id',
+      sorter: true,
     },
   ];
   return idCloumn.concat(newCloumns);
