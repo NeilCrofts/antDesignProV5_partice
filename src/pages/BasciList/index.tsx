@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Row, Col, Card, Pagination, Space } from 'antd';
+import { Table, Row, Col, Card, Pagination, Space, Button } from 'antd';
 import { PageContainer } from '@ant-design/pro-layout';
 import { useRequest } from 'umi';
 import ActionBuilder from './builder/ActionBuilder';
 import ColumnBuilder from './builder/ColumnBuilder';
+import Modal from './component/Modal';
 import style from './index.less';
 
 const Index = () => {
@@ -11,6 +12,11 @@ const Index = () => {
   const [per_page, setPerPage] = useState(12); // 设置每页的条目数和函数setPerPage
   // 定义排序请求字符
   const [sortQuery, setSortQuery] = useState('');
+  // 控制弹窗关闭
+  const [modalVisible, setModalVisible] = useState(false);
+  // 定义Modal接口(不同的按钮展示不同的弹窗数据)
+  const [modalUri,setModalUri] = useState('');
+
   // useRequest 获取接口数据
   const init = useRequest<{ data: BasicListApi.Data }>(
     `https://public-api-v2.aspirantzhang.com/api/admins?X-API-KEY=antd&page=${page}&per_page=${per_page}${sortQuery}`,
@@ -19,7 +25,7 @@ const Index = () => {
   // 当page||per_page变量改变后，运行init.run()，解决init.run会异步执行的问题
   useEffect(() => {
     init.run();
-  }, [page, per_page,sortQuery]);
+  }, [page, per_page, sortQuery]);
 
   // 页面头部
   const searchLayout = () => { };
@@ -39,14 +45,14 @@ const Index = () => {
     // 异步 会先于前两行执行
     // init.run()
   };
-  const tableChangeHandler =(_:any,__:any,sorter:any)=>{
-    if(sorter.order===undefined){
+  const tableChangeHandler = (_: any, __: any, sorter: any) => {
+    if (sorter.order === undefined) {
       setSortQuery('');
-    }else{
+    } else {
       const orderBy = sorter.order === 'ascend' ? 'asc' : 'desc';
-      setSortQuery(`&sort=${sorter.field}&order=${orderBy}`)
+      setSortQuery(`&sort=${sorter.field}&order=${orderBy}`);
     }
-  }
+  };
 
   // 页面尾部
   const afterTableLayout = () => {
@@ -72,11 +78,29 @@ const Index = () => {
 
   return (
     <PageContainer>
+      <Button
+        type="primary"
+        onClick={() => {
+          setModalVisible(true);
+          setModalUri('https://public-api-v2.aspirantzhang.com/api/admins/add?X-API-KEY=antd')
+        }}
+      >
+        Add
+      </Button>
+      <Button
+        type="primary"
+        onClick={() => {
+          setModalVisible(true);
+          setModalUri('https://public-api-v2.aspirantzhang.com/api/admins/206?X-API-KEY=antd')
+        }}
+      >
+        Edit
+      </Button>
       {searchLayout()}
       <Card>
         {beforeTableLayout()}
         <Table
-          rowKey='id'
+          rowKey="id"
           dataSource={init?.data?.dataSource}
           columns={ColumnBuilder(init?.data?.layout?.tableColumn)}
           pagination={false}
@@ -84,6 +108,13 @@ const Index = () => {
         />
         {afterTableLayout()}
       </Card>
+      <Modal
+        modalVisible={modalVisible}
+        hideModal={() => {
+          setModalVisible(false);
+        }}
+        modalUri={modalUri}
+      />
     </PageContainer>
   );
 };
