@@ -76,6 +76,7 @@ const Index = () => {
       <Card>
         {beforeTableLayout()}
         <Table
+          rowKey='id'
           dataSource={init?.data?.dataSource}
           columns={ColumnBuilder(init?.data?.layout?.tableColumn)}
           pagination={false}
