@@ -70,19 +70,13 @@ const Modal = ({
   const actionHandler = (action: PageApi.Datum3) => {
     switch (action.action) {
       case 'submit':
-        // 将uri method存在表单上
-        form.setFieldsValue({ uri: action.uri, method: action.method });
-        // form.submit()->数据到onFinish
-        form.submit();
+        const formData = { uri: action.uri, method: action.method, ...form.getFieldsValue(true) };
+        request.run(formData);
         break;
 
       default:
         break;
     }
-  };
-
-  const onFinish = (values: any) => {
-    request.run(values);
   };
 
   useEffect(() => {
@@ -122,15 +116,8 @@ const Modal = ({
             update_time: moment(),
             status: 1,
           }}
-          onFinish={onFinish}
         >
           {FormBuilder(init?.data?.layout?.tabs[0]?.data)}
-          <Form.Item name="uri" key="uri" hidden>
-            <Input />
-          </Form.Item>
-          <Form.Item name="method" key="method" hidden>
-            <Input />
-          </Form.Item>
         </Form>
       </AntModal>
     </div>
