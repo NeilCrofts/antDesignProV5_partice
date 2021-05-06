@@ -34,7 +34,7 @@ const Index = () => {
       <Row>
         <Col span={12}>...</Col>
         <Col span={12} className={style.tableToobar}>
-          <Space>{ActionBuilder(init?.data?.layout?.tableToolBar)}</Space>
+          <Space>{ActionBuilder(init?.data?.layout?.tableToolBar,()=>{})}</Space>
         </Col>
       </Row>
     );
@@ -91,7 +91,7 @@ const Index = () => {
         type="primary"
         onClick={() => {
           setModalVisible(true);
-          setModalUri('https://public-api-v2.aspirantzhang.com/api/admins/206?X-API-KEY=antd')
+          setModalUri('https://public-api-v2.aspirantzhang.com/api/admins/387?X-API-KEY=antd')
         }}
       >
         Edit

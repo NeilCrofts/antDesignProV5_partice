@@ -4,6 +4,7 @@ import { useRequest } from 'umi';
 import moment from 'moment';
 import FormBuilder from '../builder/FormBuilder';
 import ActionBuilder from '../builder/ActionBuilder';
+import {submitFieldsAdaptor,setFieldsAdaptor} from '../helper'
 
 // modalVisible是由props内提取出的modalVisible
 const Modal = ({
@@ -17,11 +18,13 @@ const Modal = ({
 }) => {
   const [form] = Form.useForm();
 
-  // 请求弹窗选项
+  // 向后台请求弹窗内容
   const init = useRequest<{ data: PageApi.Data }>(`${modalUri}`, {
     // 手动触发，init.run()时才执行
     manual: true,
   });
+
+
 
   // useRequest 向后台发送数据
   const request = useRequest(
@@ -32,10 +35,8 @@ const Modal = ({
         method,
         // body: JSON.stringify(formValues),
         data: {
-          ...formValues,
+          ...submitFieldsAdaptor(formValues),
           'X-API-KEY': 'antd',
-          create_time: moment(formValues.create_time).format(),
-          update_time: moment(formValues.update_time).format(),
         },
       };
     },
@@ -44,28 +45,7 @@ const Modal = ({
     },
   );
 
-  // 字段适配（转换），解决dataSourse的time格式问题
-  const setFieldsAdaptor = (data: PageApi.Data) => {
-    if (data?.layout?.tabs && data?.dataSource) {
-      const result = {};
-      data.layout.tabs.forEach((tab) => {
-        tab.data.forEach((field) => {
-          switch (field.type) {
-            case 'datetime':
-              // 根据tabs中data内的key值(datetime) 获取dataSourse的对应项
-              result[field.key] = moment(data.dataSource[field.key]);
-              break;
-            default:
-              // 也添加对应的默认数据
-              result[field.key] = data.dataSource[field.key];
-              break;
-          }
-        });
-      });
-      return result;
-    }
-    return {};
-  };
+
 
   const actionHandler = (action: PageApi.Datum3) => {
     switch (action.action) {
