@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Modal as AntModal, Form } from 'antd';
+import { Modal as AntModal, Form, Input } from 'antd';
 import { useRequest } from 'umi';
 import moment from 'moment';
 import FormBuilder from '../builder/FormBuilder';
@@ -16,7 +16,34 @@ const Modal = ({
   modalUri: string;
 }) => {
   const [form] = Form.useForm();
-  const init = useRequest<{ data: PageApi.Data }>(`${modalUri}`);
+
+  // 请求弹窗选项
+  const init = useRequest<{ data: PageApi.Data }>(`${modalUri}`, {
+    // 手动触发，init.run()时才执行
+    manual: true,
+  });
+
+  // useRequest 向后台发送数据
+  const request = useRequest(
+    (values) => {
+      const { uri, method, ...formValues } = values;
+      return {
+        url: `https://public-api-v2.aspirantzhang.com${uri}`,
+        method,
+        // body: JSON.stringify(formValues),
+        data: {
+          ...formValues,
+          'X-API-KEY': 'antd',
+          create_time: moment(formValues.create_time).format(),
+          update_time: moment(formValues.update_time).format(),
+        },
+      };
+    },
+    {
+      manual: true,
+    },
+  );
+
   // 字段适配（转换），解决dataSourse的time格式问题
   const setFieldsAdaptor = (data: PageApi.Data) => {
     if (data?.layout?.tabs && data?.dataSource) {
@@ -40,6 +67,24 @@ const Modal = ({
     return {};
   };
 
+  const actionHandler = (action: PageApi.Datum3) => {
+    switch (action.action) {
+      case 'submit':
+        // 将uri method存在表单上
+        form.setFieldsValue({ uri: action.uri, method: action.method });
+        // form.submit()->数据到onFinish
+        form.submit();
+        break;
+
+      default:
+        break;
+    }
+  };
+
+  const onFinish = (values: any) => {
+    request.run(values);
+  };
+
   useEffect(() => {
     // 数据获取前清空数据，解决add弹窗遗留edit弹窗数据问题
     form.resetFields();
@@ -57,13 +102,14 @@ const Modal = ({
     labelCol: { span: 8 },
     wrapperCol: { span: 16 },
   };
+
   return (
     <div>
       <AntModal
         title={init?.data?.page?.title}
         visible={modalVisible}
         onCancel={hideModal}
-        footer={ActionBuilder(init?.data?.layout?.actions[0]?.data)}
+        footer={ActionBuilder(init?.data?.layout?.actions[0]?.data, actionHandler)}
         // 取消点击遮罩层时弹窗关闭
         maskClosable={false}
       >
@@ -73,11 +119,18 @@ const Modal = ({
           // 给部分内容添加默认值，提高用户体验
           initialValues={{
             create_time: moment(),
-            update_time:moment(),
-            status:1
+            update_time: moment(),
+            status: 1,
           }}
+          onFinish={onFinish}
         >
           {FormBuilder(init?.data?.layout?.tabs[0]?.data)}
+          <Form.Item name="uri" key="uri" hidden>
+            <Input />
+          </Form.Item>
+          <Form.Item name="method" key="method" hidden>
+            <Input />
+          </Form.Item>
         </Form>
       </AntModal>
     </div>
