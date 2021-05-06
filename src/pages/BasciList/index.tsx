@@ -15,10 +15,10 @@ const Index = () => {
   // 控制弹窗关闭
   const [modalVisible, setModalVisible] = useState(false);
   // 定义Modal接口(不同的按钮展示不同的弹窗数据)
-  const [modalUri,setModalUri] = useState('');
+  const [modalUri, setModalUri] = useState('');
 
-  // useRequest 获取接口数据
-  const init = useRequest<{ data: BasicListApi.Data }>(
+  // useRequest 获取 列表(admit list) 数据
+  const init = useRequest<{ data: BasicListApi.ListData }>(
     `https://public-api-v2.aspirantzhang.com/api/admins?X-API-KEY=antd&page=${page}&per_page=${per_page}${sortQuery}`,
   );
 
@@ -28,95 +28,107 @@ const Index = () => {
   }, [page, per_page, sortQuery]);
 
   // 页面头部
-  const searchLayout = () => { };
-  const beforeTableLayout = () => {
-    return (
-      <Row>
-        <Col span={12}>...</Col>
-        <Col span={12} className={style.tableToobar}>
-          <Space>{ActionBuilder(init?.data?.layout?.tableToolBar,()=>{})}</Space>
-        </Col>
-      </Row>
-    );
-  };
-  const pagenationChangeHandler = (_page: any, _per_page: any) => {
-    setPage(_page);
-    setPerPage(_per_page);
-    // 异步 会先于前两行执行
-    // init.run()
-  };
-  const tableChangeHandler = (_: any, __: any, sorter: any) => {
-    if (sorter.order === undefined) {
-      setSortQuery('');
-    } else {
-      const orderBy = sorter.order === 'ascend' ? 'asc' : 'desc';
-      setSortQuery(`&sort=${sorter.field}&order=${orderBy}`);
+  const searchLayout = () => {};
+
+  // 点击add添加按钮 显示弹窗和设置请求地址
+  const actionHandler = (action: BasicListApi.Action) => {
+    switch (action.action) {
+      case 'modal':
+        setModalVisible(true);
+        setModalUri(action.uri as string);
+        break;
+
+      default:
+        break;
     }
-  };
+  }
+    const beforeTableLayout = () => {
+      return (
+        <Row>
+          <Col span={12}>...</Col>
+          <Col span={12} className={style.tableToobar}>
+            <Space>{ActionBuilder(init?.data?.layout?.tableToolBar, actionHandler)}</Space>
+          </Col>
+        </Row>
+      );
+    };
+    const pagenationChangeHandler = (_page: any, _per_page: any) => {
+      setPage(_page);
+      setPerPage(_per_page);
+      // 异步 会先于前两行执行
+      // init.run()
+    };
+    const tableChangeHandler = (_: any, __: any, sorter: any) => {
+      if (sorter.order === undefined) {
+        setSortQuery('');
+      } else {
+        const orderBy = sorter.order === 'ascend' ? 'asc' : 'desc';
+        setSortQuery(`&sort=${sorter.field}&order=${orderBy}`);
+      }
+    };
 
-  // 页面尾部
-  const afterTableLayout = () => {
+    // 页面尾部
+    const afterTableLayout = () => {
+      return (
+        <Row>
+          <Col span={12}>...</Col>
+          <Col span={12} className={style.tableToobar}>
+            <Pagination
+              total={init?.data?.meta?.total || 0}
+              current={init?.data?.meta?.page || 1}
+              pageSize={init?.data?.meta?.per_page || 10}
+              showSizeChanger
+              showQuickJumper
+              showTotal={(total) => `Total ${total} items`}
+              // 都为改变页码和每页条目数的方法
+              onChange={pagenationChangeHandler}
+              onShowSizeChange={pagenationChangeHandler}
+            />
+          </Col>
+        </Row>
+      );
+    };
+
     return (
-      <Row>
-        <Col span={12}>...</Col>
-        <Col span={12} className={style.tableToobar}>
-          <Pagination
-            total={init?.data?.meta?.total || 0}
-            current={init?.data?.meta?.page || 1}
-            pageSize={init?.data?.meta?.per_page || 10}
-            showSizeChanger
-            showQuickJumper
-            showTotal={(total) => `Total ${total} items`}
-            // 都为改变页码和每页条目数的方法
-            onChange={pagenationChangeHandler}
-            onShowSizeChange={pagenationChangeHandler}
+      <PageContainer>
+        <Button
+          type="primary"
+          onClick={() => {
+            setModalVisible(true);
+            setModalUri('/api/admins/add');
+          }}
+        >
+          Add
+        </Button>
+        <Button
+          type="primary"
+          onClick={() => {
+            setModalVisible(true);
+            setModalUri('/api/admins/387');
+          }}
+        >
+          Edit
+        </Button>
+        {searchLayout()}
+        <Card>
+          {beforeTableLayout()}
+          <Table
+            rowKey="id"
+            dataSource={init?.data?.dataSource}
+            columns={ColumnBuilder(init?.data?.layout?.tableColumn,actionHandler)}
+            pagination={false}
+            onChange={tableChangeHandler}
           />
-        </Col>
-      </Row>
+          {afterTableLayout()}
+        </Card>
+        <Modal
+          modalVisible={modalVisible}
+          hideModal={() => {
+            setModalVisible(false);
+          }}
+          modalUri={modalUri}
+        />
+      </PageContainer>
     );
   };
-
-  return (
-    <PageContainer>
-      <Button
-        type="primary"
-        onClick={() => {
-          setModalVisible(true);
-          setModalUri('https://public-api-v2.aspirantzhang.com/api/admins/add?X-API-KEY=antd')
-        }}
-      >
-        Add
-      </Button>
-      <Button
-        type="primary"
-        onClick={() => {
-          setModalVisible(true);
-          setModalUri('https://public-api-v2.aspirantzhang.com/api/admins/387?X-API-KEY=antd')
-        }}
-      >
-        Edit
-      </Button>
-      {searchLayout()}
-      <Card>
-        {beforeTableLayout()}
-        <Table
-          rowKey="id"
-          dataSource={init?.data?.dataSource}
-          columns={ColumnBuilder(init?.data?.layout?.tableColumn)}
-          pagination={false}
-          onChange={tableChangeHandler}
-        />
-        {afterTableLayout()}
-      </Card>
-      <Modal
-        modalVisible={modalVisible}
-        hideModal={() => {
-          setModalVisible(false);
-        }}
-        modalUri={modalUri}
-      />
-    </PageContainer>
-  );
-};
-
 export default Index;

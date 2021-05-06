@@ -13,7 +13,7 @@ export  const submitFieldsAdaptor = (formValues:any)=>{
 }
 
 // 字段适配（转换），解决dataSourse的time格式问题
-export const setFieldsAdaptor = (data: PageApi.Data) => {
+export const setFieldsAdaptor = (data: BasicListApi.PageData) => {
   if (data?.layout?.tabs && data?.dataSource) {
     const result = {};
     data.layout.tabs.forEach((tab) => {

@@ -2,7 +2,7 @@ import React from 'react'
 import { Input, Form,DatePicker,TreeSelect,Switch} from 'antd'
 
 // 该组件仅负责渲染展示
-const FormBuilder = (data: PageApi.Datum[]|undefined) => {
+const FormBuilder = (data: BasicListApi.Filed[]|undefined) => {
   return (data || []).map((field) => {
     switch(field.type){
       case 'text':

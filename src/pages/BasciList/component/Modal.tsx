@@ -4,7 +4,7 @@ import { useRequest } from 'umi';
 import moment from 'moment';
 import FormBuilder from '../builder/FormBuilder';
 import ActionBuilder from '../builder/ActionBuilder';
-import {submitFieldsAdaptor,setFieldsAdaptor} from '../helper'
+import { submitFieldsAdaptor, setFieldsAdaptor } from '../helper';
 
 // modalVisible是由props内提取出的modalVisible
 const Modal = ({
@@ -18,17 +18,21 @@ const Modal = ({
 }) => {
   const [form] = Form.useForm();
 
-  // 向后台请求弹窗内容
-  const init = useRequest<{ data: PageApi.Data }>(`${modalUri}`, {
-    // 手动触发，init.run()时才执行
-    manual: true,
-  });
+  // 向后台请求 弹窗内容
+  const init = useRequest<{ data: BasicListApi.PageData }>(
+    `https://public-api-v2.aspirantzhang.com${modalUri}?X-API-KEY=antd`,
+    {
+      // 手动触发，init.run()时才执行
+      manual: true,
+      onError: () => {
+        hideModal();
+      },
+    },
+  );
 
-
-
-  // useRequest 向后台发送数据
+  // useRequest 向后台发送弹窗选项数据
   const request = useRequest(
-    (values) => {
+    (values:any) => {
       const { uri, method, ...formValues } = values;
       return {
         url: `https://public-api-v2.aspirantzhang.com${uri}`,
@@ -42,12 +46,13 @@ const Modal = ({
     },
     {
       manual: true,
+      onSuccess:(data)=>{
+        console.log(data);
+      }
     },
   );
 
-
-
-  const actionHandler = (action: PageApi.Datum3) => {
+  const actionHandler = (action: BasicListApi.Action) => {
     switch (action.action) {
       case 'submit':
         const formData = { uri: action.uri, method: action.method, ...form.getFieldsValue(true) };

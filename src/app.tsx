@@ -1,6 +1,6 @@
 import type { Settings as LayoutSettings } from '@ant-design/pro-layout';
 import { PageLoading } from '@ant-design/pro-layout';
-import { notification } from 'antd';
+import { message } from 'antd';
 import type { RequestConfig, RunTimeLayoutConfig } from 'umi';
 import { getIntl, getLocale, history, Link } from 'umi';
 import RightContent from '@/components/RightContent';
@@ -73,27 +73,62 @@ export async function getInitialState(): Promise<{
  */
 export const request: RequestConfig = {
   errorHandler: (error: ResponseError) => {
-    const { messages } = getIntl(getLocale());
-    const { response } = error;
+    // const { messages } = getIntl(getLocale());
+    // const { response } = error;
 
-    if (response && response.status) {
-      const { status, statusText, url } = response;
-      const requestErrorMessage = messages['app.request.error'];
-      const errorMessage = `${requestErrorMessage} ${status}: ${url}`;
-      const errorDescription = messages[`app.request.${status}`] || statusText;
-      notification.error({
-        message: errorMessage,
-        description: errorDescription,
-      });
-    }
+    // if (response && response.status) {
+    //   const { status, statusText, url } = response;
+    //   const requestErrorMessage = messages['app.request.error'];
+    //   const errorMessage = `${requestErrorMessage} ${status}: ${url}`;
+    //   const errorDescription = messages[`app.request.${status}`] || statusText;
+    //   notification.error({
+    //     message: errorMessage,
+    //     description: errorDescription,
+    //   });
+    // }
 
-    if (!response) {
-      notification.error({
-        description: '您的网络发生异常，无法连接服务器',
-        message: '网络异常',
-      });
+    // if (!response) {
+    //   notification.error({
+    //     description: '您的网络发生异常，无法连接服务器',
+    //     message: '网络异常',
+    //   });
+    // }
+    // throw error;
+
+    switch (error.name) {
+      case 'BizError':
+        if (error.data.message) {
+          message.error({
+            content: error.data.message,
+            key: 'process',
+            duration: 10,
+          });
+        } else {
+          message.error({
+            content: 'Business Error, please try again.',
+            key: 'process',
+            duration: 10,
+          });
+        }
+        break;
+      case 'ResponseError':
+        message.error({
+          content: `${error.response.status} ${error.response.statusText}. Please try again.`,
+          key: 'process',
+          duration: 10,
+        });
+      case 'TypeError':
+        message.error({
+          content: `Network error. Please try again.`,
+          key: 'process',
+          duration: 10,
+        });
+        break;
+      default:
+        break;
     }
     throw error;
+
   },
 };
 
