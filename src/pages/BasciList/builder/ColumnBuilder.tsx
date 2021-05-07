@@ -3,7 +3,10 @@ import { Space, Tag } from 'antd';
 import ActionBuilder from './ActionBuilder';
 
 // 列表内容
-const columnsBuilder=(tableColumn: BasicListApi.Filed[] | undefined,actionHandler:BasicListApi.ActionHandler) => {
+const columnsBuilder = (
+  tableColumn: BasicListApi.Filed[] | undefined,
+  actionHandler: BasicListApi.ActionHandler,
+) => {
   const newCloumns: BasicListApi.Filed[] = [];
   // dataSourse的数据是在tableColumn中处理的
   (tableColumn || []).forEach((column) => {
@@ -19,13 +22,13 @@ const columnsBuilder=(tableColumn: BasicListApi.Filed[] | undefined,actionHandle
         // 修改状态state
         case 'switch':
           column.render = (value: any) => {
-            const option = (column.data || []).find((item:any) => item.value === value);
+            const option = (column.data || []).find((item: any) => item.value === value);
             return <Tag color={value ? 'blue' : 'red'}>{option?.title}</Tag>;
           };
           break;
         case 'actions':
-          column.render = () => {
-            return <Space>{ActionBuilder(column.actions,actionHandler)}</Space>;
+          column.render = (_: any, record: any) => {
+            return <Space>{ActionBuilder(column.actions, actionHandler, false, record)}</Space>;
           };
           break;
 
@@ -36,7 +39,7 @@ const columnsBuilder=(tableColumn: BasicListApi.Filed[] | undefined,actionHandle
       newCloumns.push(column);
     }
   });
-  const idCloumn: BasicListApi.Filed[]= [
+  const idCloumn: BasicListApi.Filed[] = [
     {
       title: 'ID',
       dataIndex: 'id',

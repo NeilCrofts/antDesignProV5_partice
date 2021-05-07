@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Modal as AntModal, Form, Input } from 'antd';
+import { Modal as AntModal, Form, message } from 'antd';
 import { useRequest } from 'umi';
 import moment from 'moment';
 import FormBuilder from '../builder/FormBuilder';
@@ -32,7 +32,12 @@ const Modal = ({
 
   // useRequest 向后台发送弹窗选项数据
   const request = useRequest(
-    (values:any) => {
+    (values: any) => {
+      message.loading({
+        content: 'Processing...',
+        key: 'process',
+        duration: 0,
+      });
       const { uri, method, ...formValues } = values;
       return {
         url: `https://public-api-v2.aspirantzhang.com${uri}`,
@@ -46,9 +51,16 @@ const Modal = ({
     },
     {
       manual: true,
-      onSuccess:(data)=>{
-        console.log(data);
-      }
+      onSuccess: (data) => {
+        message.success({
+          content: data.message,
+          key: 'process',
+        });
+        hideModal();
+      },
+      formatResult: (res) => {
+        return res;
+      },
     },
   );
 
@@ -88,7 +100,12 @@ const Modal = ({
         title={init?.data?.page?.title}
         visible={modalVisible}
         onCancel={hideModal}
-        footer={ActionBuilder(init?.data?.layout?.actions[0]?.data, actionHandler)}
+        footer={ActionBuilder(
+          init?.data?.layout?.actions[0]?.data,
+          actionHandler,
+          request.loading,
+          null,
+        )}
         // 取消点击遮罩层时弹窗关闭
         maskClosable={false}
       >

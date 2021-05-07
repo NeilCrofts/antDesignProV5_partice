@@ -1,11 +1,11 @@
 import moment from 'moment'
 
 // 字段适配（转换），解决表单提交的time格式问题
-export  const submitFieldsAdaptor = (formValues:any)=>{
+export const submitFieldsAdaptor = (formValues: any) => {
   const result = formValues;
-  Object.keys(formValues).forEach((key)=>{
+  Object.keys(formValues).forEach((key) => {
     // 判断是否是monent对象
-    if(moment.isMoment(formValues[key])){
+    if (moment.isMoment(formValues[key])) {
       result[key] = moment(formValues[key]).format()
     }
   })

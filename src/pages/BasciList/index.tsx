@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Row, Col, Card, Pagination, Space, Button } from 'antd';
+import { Table, Row, Col, Card, Pagination, Space } from 'antd';
 import { PageContainer } from '@ant-design/pro-layout';
 import { useRequest } from 'umi';
 import ActionBuilder from './builder/ActionBuilder';
@@ -31,7 +31,7 @@ const Index = () => {
   const searchLayout = () => {};
 
   // 点击add添加按钮 显示弹窗和设置请求地址
-  const actionHandler = (action: BasicListApi.Action) => {
+  const actionHandler = (action: BasicListApi.Action, record: any) => {
     switch (action.action) {
       case 'modal':
         setModalVisible(true);
@@ -41,94 +41,78 @@ const Index = () => {
       default:
         break;
     }
-  }
-    const beforeTableLayout = () => {
-      return (
-        <Row>
-          <Col span={12}>...</Col>
-          <Col span={12} className={style.tableToobar}>
-            <Space>{ActionBuilder(init?.data?.layout?.tableToolBar, actionHandler)}</Space>
-          </Col>
-        </Row>
-      );
-    };
-    const pagenationChangeHandler = (_page: any, _per_page: any) => {
-      setPage(_page);
-      setPerPage(_per_page);
-      // 异步 会先于前两行执行
-      // init.run()
-    };
-    const tableChangeHandler = (_: any, __: any, sorter: any) => {
-      if (sorter.order === undefined) {
-        setSortQuery('');
-      } else {
-        const orderBy = sorter.order === 'ascend' ? 'asc' : 'desc';
-        setSortQuery(`&sort=${sorter.field}&order=${orderBy}`);
-      }
-    };
-
-    // 页面尾部
-    const afterTableLayout = () => {
-      return (
-        <Row>
-          <Col span={12}>...</Col>
-          <Col span={12} className={style.tableToobar}>
-            <Pagination
-              total={init?.data?.meta?.total || 0}
-              current={init?.data?.meta?.page || 1}
-              pageSize={init?.data?.meta?.per_page || 10}
-              showSizeChanger
-              showQuickJumper
-              showTotal={(total) => `Total ${total} items`}
-              // 都为改变页码和每页条目数的方法
-              onChange={pagenationChangeHandler}
-              onShowSizeChange={pagenationChangeHandler}
-            />
-          </Col>
-        </Row>
-      );
-    };
-
+  };
+  const beforeTableLayout = () => {
     return (
-      <PageContainer>
-        <Button
-          type="primary"
-          onClick={() => {
-            setModalVisible(true);
-            setModalUri('/api/admins/add');
-          }}
-        >
-          Add
-        </Button>
-        <Button
-          type="primary"
-          onClick={() => {
-            setModalVisible(true);
-            setModalUri('/api/admins/387');
-          }}
-        >
-          Edit
-        </Button>
-        {searchLayout()}
-        <Card>
-          {beforeTableLayout()}
-          <Table
-            rowKey="id"
-            dataSource={init?.data?.dataSource}
-            columns={ColumnBuilder(init?.data?.layout?.tableColumn,actionHandler)}
-            pagination={false}
-            onChange={tableChangeHandler}
-          />
-          {afterTableLayout()}
-        </Card>
-        <Modal
-          modalVisible={modalVisible}
-          hideModal={() => {
-            setModalVisible(false);
-          }}
-          modalUri={modalUri}
-        />
-      </PageContainer>
+      <Row>
+        <Col span={12}>...</Col>
+        <Col span={12} className={style.tableToobar}>
+          <Space>
+            {ActionBuilder(init?.data?.layout?.tableToolBar, actionHandler, false, null)}
+          </Space>
+        </Col>
+      </Row>
     );
   };
+  const pagenationChangeHandler = (_page: any, _per_page: any) => {
+    setPage(_page);
+    setPerPage(_per_page);
+    // 异步 会先于前两行执行
+    // init.run()
+  };
+  const tableChangeHandler = (_: any, __: any, sorter: any) => {
+    if (sorter.order === undefined) {
+      setSortQuery('');
+    } else {
+      const orderBy = sorter.order === 'ascend' ? 'asc' : 'desc';
+      setSortQuery(`&sort=${sorter.field}&order=${orderBy}`);
+    }
+  };
+
+  // 页面尾部
+  const afterTableLayout = () => {
+    return (
+      <Row>
+        <Col span={12}>...</Col>
+        <Col span={12} className={style.tableToobar}>
+          <Pagination
+            total={init?.data?.meta?.total || 0}
+            current={init?.data?.meta?.page || 1}
+            pageSize={init?.data?.meta?.per_page || 10}
+            showSizeChanger
+            showQuickJumper
+            showTotal={(total) => `Total ${total} items`}
+            // 都为改变页码和每页条目数的方法
+            onChange={pagenationChangeHandler}
+            onShowSizeChange={pagenationChangeHandler}
+          />
+        </Col>
+      </Row>
+    );
+  };
+
+  return (
+    <PageContainer>
+      {searchLayout()}
+      <Card>
+        {beforeTableLayout()}
+        <Table
+          rowKey="id"
+          dataSource={init?.data?.dataSource}
+          columns={ColumnBuilder(init?.data?.layout?.tableColumn, actionHandler)}
+          pagination={false}
+          onChange={tableChangeHandler}
+        />
+        {afterTableLayout()}
+      </Card>
+      <Modal
+        modalVisible={modalVisible}
+        hideModal={() => {
+          setModalVisible(false);
+        }}
+        modalUri={modalUri}
+      />
+    </PageContainer>
+  );
+};
 export default Index;

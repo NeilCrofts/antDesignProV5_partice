@@ -2,7 +2,8 @@ import type { Settings as LayoutSettings } from '@ant-design/pro-layout';
 import { PageLoading } from '@ant-design/pro-layout';
 import { message } from 'antd';
 import type { RequestConfig, RunTimeLayoutConfig } from 'umi';
-import { getIntl, getLocale, history, Link } from 'umi';
+// import { getIntl, getLocale, history, Link } from 'umi';
+import { history, Link } from 'umi';
 import RightContent from '@/components/RightContent';
 import Footer from '@/components/Footer';
 import type { ResponseError } from 'umi-request';
@@ -117,6 +118,7 @@ export const request: RequestConfig = {
           key: 'process',
           duration: 10,
         });
+        break;
       case 'TypeError':
         message.error({
           content: `Network error. Please try again.`,
