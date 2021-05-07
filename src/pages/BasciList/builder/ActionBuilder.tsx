@@ -5,8 +5,8 @@ import type { ButtonType } from 'antd/lib/button';
 const actionBuilder = (
   actions: BasicListApi.Action[] | undefined,
   actionHandler: BasicListApi.ActionHandler,
-  loading: boolean,
-  record: any,
+  loading=false,
+  record={},
 ) => {
   return (actions || []).map((action) => {
     if (action.component === 'button') {

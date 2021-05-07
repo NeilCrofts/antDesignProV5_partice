@@ -34,22 +34,28 @@ const Index = () => {
   const actionHandler = (action: BasicListApi.Action, record: any) => {
     switch (action.action) {
       case 'modal':
+        const actionUri = action.uri?.replace(/:\w+/g, (field) => {
+          // field 为正则查询到的 :id
+          // 取出record 中的 id 属性的值
+          return record[field.replace(':', '')];
+        });
+        setModalUri(actionUri as string);
         setModalVisible(true);
-        setModalUri(action.uri as string);
         break;
-
+        case 'reload':
+          init.run();
+          break;
       default:
         break;
     }
   };
+  // 右上角按钮
   const beforeTableLayout = () => {
     return (
       <Row>
         <Col span={12}>...</Col>
         <Col span={12} className={style.tableToobar}>
-          <Space>
-            {ActionBuilder(init?.data?.layout?.tableToolBar, actionHandler, false, null)}
-          </Space>
+          <Space>{ActionBuilder(init?.data?.layout?.tableToolBar, actionHandler)}</Space>
         </Col>
       </Row>
     );
@@ -91,6 +97,12 @@ const Index = () => {
     );
   };
 
+  const hideModal = (reload = false) => {
+    setModalVisible(false);
+    // 弹窗关闭后 刷新界面数据
+    if (reload) init.run();
+  };
+
   return (
     <PageContainer>
       {searchLayout()}
@@ -105,13 +117,7 @@ const Index = () => {
         />
         {afterTableLayout()}
       </Card>
-      <Modal
-        modalVisible={modalVisible}
-        hideModal={() => {
-          setModalVisible(false);
-        }}
-        modalUri={modalUri}
-      />
+      <Modal modalVisible={modalVisible} hideModal={hideModal} modalUri={modalUri} />
     </PageContainer>
   );
 };

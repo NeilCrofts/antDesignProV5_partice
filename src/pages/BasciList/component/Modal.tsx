@@ -13,7 +13,7 @@ const Modal = ({
   modalUri,
 }: {
   modalVisible: boolean;
-  hideModal: () => void;
+  hideModal: (reload?:boolean) => void;
   modalUri: string;
 }) => {
   const [form] = Form.useForm();
@@ -56,7 +56,7 @@ const Modal = ({
           content: data.message,
           key: 'process',
         });
-        hideModal();
+        hideModal(true);
       },
       formatResult: (res) => {
         return res;
@@ -70,7 +70,12 @@ const Modal = ({
         const formData = { uri: action.uri, method: action.method, ...form.getFieldsValue(true) };
         request.run(formData);
         break;
-
+      case 'cancel':
+        hideModal();
+        break;
+      case 'reset':
+        form.resetFields();
+        break;
       default:
         break;
     }
@@ -99,13 +104,10 @@ const Modal = ({
       <AntModal
         title={init?.data?.page?.title}
         visible={modalVisible}
-        onCancel={hideModal}
-        footer={ActionBuilder(
-          init?.data?.layout?.actions[0]?.data,
-          actionHandler,
-          request.loading,
-          null,
-        )}
+        onCancel={()=>{
+          return hideModal()
+        }}
+        footer={ActionBuilder(init?.data?.layout?.actions[0]?.data, actionHandler, request.loading)}
         // 取消点击遮罩层时弹窗关闭
         maskClosable={false}
       >
