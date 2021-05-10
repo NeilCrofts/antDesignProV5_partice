@@ -32,7 +32,7 @@ const Index = () => {
     `https://public-api-v2.aspirantzhang.com/api/admins?X-API-KEY=antd${pageQuery}${sortQuery}`,
   );
 
-  const request = useRequest(
+  const request = useRequest( 
     (values: any) => {
       message.loading({
         content: 'Processing...',

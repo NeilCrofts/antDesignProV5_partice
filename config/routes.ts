@@ -49,6 +49,12 @@
     component: './BasciList',
   },
   {
+    name: 'single-page',
+    icon: 'table',
+    path: '/basic-list/api/admins/289',
+    component: './BasciList/component/Page',
+  },
+  {
     path: '/',
     redirect: '/welcome',
   },
