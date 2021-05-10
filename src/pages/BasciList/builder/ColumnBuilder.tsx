@@ -27,7 +27,7 @@ const columnsBuilder = (
           };
           break;
         case 'actions':
-          column.render = (_: any, record: any) => {
+          column.render = (_: any, record: any) => { // 第二个参数record为当前的数据
             return <Space>{ActionBuilder(column.actions, actionHandler, false, record)}</Space>;
           };
           break;

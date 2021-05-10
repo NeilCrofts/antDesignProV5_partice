@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Row, Col, Card, Pagination, Space, Modal as AntdModal, message } from 'antd';
 import { PageContainer, FooterToolbar } from '@ant-design/pro-layout';
-import { useRequest } from 'umi';
+import { useRequest,useIntl } from 'umi';
+import {useSessionStorageState} from 'ahooks'
 import { ExclamationCircleOutlined } from '@ant-design/icons';
 import ActionBuilder from './builder/ActionBuilder';
 import ColumnBuilder from './builder/ColumnBuilder';
@@ -21,7 +22,8 @@ const Index = () => {
   const [selectedRows, setSelectedRows] = useState([]);
   const { confirm } = AntdModal;
   // 将列表存为全局
-  const [tableColumn, setTableColumn] = useState<BasicListApi.Filed[]>([]);
+  const [tableColumn, setTableColumn] = useSessionStorageState<BasicListApi.Filed[]>('basicListTableColumn',[]);
+  const lang = useIntl();
 
   // useRequest 获取 列表(admit list) 数据
   const init = useRequest<{ data: BasicListApi.ListData }>(
@@ -71,13 +73,13 @@ const Index = () => {
     }
   }, [init?.data?.layout?.tableColumn]);
 
-  const batchOverView = () => {
+  const batchOverView = (dataSourse:BasicListApi.Filed[]) => {
     return (
       <Table
         size="small"
         rowKey="id"
-        columns={[tableColumn[0] || {}, tableColumn[1] || {}]}
-        dataSource={selectedRows}
+        columns={tableColumn?[tableColumn[0] || {}, tableColumn[1] || {}]:[]}
+        dataSource={dataSourse}
         pagination={false}
       ></Table>
     );
@@ -86,16 +88,16 @@ const Index = () => {
   // 页面头部
   const searchLayout = () => {};
 
-  // 点击add添加按钮 显示弹窗和设置请求地址
   function actionHandler(action: BasicListApi.Action, record: any) {
     switch (action.action) {
+      // 点击add添加按钮 显示弹窗和设置请求地址
       case 'modal':
         setModalUri(
-          action.uri?.replace(/:\w+/g, (field) => {
+          (action.uri||"").replace(/:\w+/g, (field) => {
             // field 为正则查询到的 :id
             // 取出record 中的 id 属性的值
             return record[field.replace(':', '')];
-          }) as string,
+          }),
         );
         setModalVisible(true);
         break;
@@ -103,23 +105,32 @@ const Index = () => {
         init.run();
         break;
       case 'delete':
+      case 'deletePermanently':
+      case 'restore':
+        const operationName = lang.formatMessage({
+          id:`basic-list.list.actionHandler.operation.${action.action}`,
+        })
         confirm({
-          title: 'Do you Want to delete these items?',
+          title:lang.formatMessage({
+            id:'basic-list.list.actionHandler.confirmTitle'
+          },{
+            operationName:operationName
+          }),
+          // title: `Do you Want to ${action.action} these items?`,
           icon: <ExclamationCircleOutlined />,
-          content: batchOverView(),
-          okText: 'Sure to delete!',
+          content: batchOverView(Object.keys(record).length ? [record] : selectedRows),
+          okText: `Sure to ${action.action}!`,
           okType: 'danger',
           cancelText: 'No',
           onOk() {
             return request.run({
               uri: action.uri,
               method: action.method,
-              type: 'delete',
-              ids: selectedRowKeys,
+              type: action.action,
+              ids: Object.keys(record).length ? [record.id] : selectedRowKeys,
             });
           },
           onCancel() {
-            console.log('concal');
           },
         });
         break;

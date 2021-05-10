@@ -110,6 +110,7 @@ const Modal = ({
         footer={ActionBuilder(init?.data?.layout?.actions[0]?.data, actionHandler, request.loading)}
         // 取消点击遮罩层时弹窗关闭
         maskClosable={false}
+        forceRender
       >
         <Form
           form={form}
