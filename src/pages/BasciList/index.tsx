@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Row, Col, Card, Pagination, Space } from 'antd';
-import { PageContainer } from '@ant-design/pro-layout';
+import { Table, Row, Col, Card, Pagination, Space, Modal as AntdModal, message } from 'antd';
+import { PageContainer, FooterToolbar } from '@ant-design/pro-layout';
 import { useRequest } from 'umi';
+import { ExclamationCircleOutlined } from '@ant-design/icons';
 import ActionBuilder from './builder/ActionBuilder';
 import ColumnBuilder from './builder/ColumnBuilder';
 import Modal from './component/Modal';
@@ -16,10 +17,47 @@ const Index = () => {
   const [modalVisible, setModalVisible] = useState(false);
   // 定义Modal接口(不同的按钮展示不同的弹窗数据)
   const [modalUri, setModalUri] = useState('');
+  const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+  const [selectedRows, setSelectedRows] = useState([]);
+  const { confirm } = AntdModal;
+  // 将列表存为全局
+  const [tableColumn, setTableColumn] = useState<BasicListApi.Filed[]>([]);
 
   // useRequest 获取 列表(admit list) 数据
   const init = useRequest<{ data: BasicListApi.ListData }>(
     `https://public-api-v2.aspirantzhang.com/api/admins?X-API-KEY=antd&page=${page}&per_page=${per_page}${sortQuery}`,
+  );
+
+  const request = useRequest(
+    (values: any) => {
+      message.loading({
+        content: 'Processing...',
+        key: 'process',
+        duration: 0,
+      });
+      const { uri, method, ...formValues } = values;
+      return {
+        url: `https://public-api-v2.aspirantzhang.com${uri}`,
+        method,
+        // body: JSON.stringify(formValues),
+        data: {
+          ...formValues,
+          'X-API-KEY': 'antd',
+        },
+      };
+    },
+    {
+      manual: true,
+      onSuccess: (data) => {
+        message.success({
+          content: data.message,
+          key: 'process',
+        });
+      },
+      formatResult: (res) => {
+        return res;
+      },
+    },
   );
 
   // 当page||per_page变量改变后，运行init.run()，解决init.run会异步执行的问题
@@ -27,28 +65,68 @@ const Index = () => {
     init.run();
   }, [page, per_page, sortQuery]);
 
+  useEffect(() => {
+    if (init?.data?.layout?.tableColumn) {
+      setTableColumn(ColumnBuilder(init?.data?.layout?.tableColumn, actionHandler));
+    }
+  }, [init?.data?.layout?.tableColumn]);
+
+  const batchOverView = () => {
+    return (
+      <Table
+        size="small"
+        rowKey="id"
+        columns={[tableColumn[0] || {}, tableColumn[1] || {}]}
+        dataSource={selectedRows}
+        pagination={false}
+      ></Table>
+    );
+  };
+
   // 页面头部
   const searchLayout = () => {};
 
   // 点击add添加按钮 显示弹窗和设置请求地址
-  const actionHandler = (action: BasicListApi.Action, record: any) => {
+  function actionHandler(action: BasicListApi.Action, record: any) {
     switch (action.action) {
       case 'modal':
-        const actionUri = action.uri?.replace(/:\w+/g, (field) => {
-          // field 为正则查询到的 :id
-          // 取出record 中的 id 属性的值
-          return record[field.replace(':', '')];
-        });
-        setModalUri(actionUri as string);
+        setModalUri(
+          action.uri?.replace(/:\w+/g, (field) => {
+            // field 为正则查询到的 :id
+            // 取出record 中的 id 属性的值
+            return record[field.replace(':', '')];
+          }) as string,
+        );
         setModalVisible(true);
         break;
-        case 'reload':
-          init.run();
-          break;
+      case 'reload':
+        init.run();
+        break;
+      case 'delete':
+        confirm({
+          title: 'Do you Want to delete these items?',
+          icon: <ExclamationCircleOutlined />,
+          content: batchOverView(),
+          okText: 'Sure to delete!',
+          okType: 'danger',
+          cancelText: 'No',
+          onOk() {
+            return request.run({
+              uri: action.uri,
+              method: action.method,
+              type: 'delete',
+              ids: selectedRowKeys,
+            });
+          },
+          onCancel() {
+            console.log('concal');
+          },
+        });
+        break;
       default:
         break;
     }
-  };
+  }
   // 右上角按钮
   const beforeTableLayout = () => {
     return (
@@ -66,6 +144,7 @@ const Index = () => {
     // 异步 会先于前两行执行
     // init.run()
   };
+  // 列表排列功能
   const tableChangeHandler = (_: any, __: any, sorter: any) => {
     if (sorter.order === undefined) {
       setSortQuery('');
@@ -74,7 +153,14 @@ const Index = () => {
       setSortQuery(`&sort=${sorter.field}&order=${orderBy}`);
     }
   };
-
+  // 列表选择功能
+  const rowSelection = {
+    selectedRowKeys,
+    onChange: (_selectedRowKeys: any, _selectedRows: any) => {
+      setSelectedRowKeys(_selectedRowKeys);
+      setSelectedRows(_selectedRows);
+    },
+  };
   // 页面尾部
   const afterTableLayout = () => {
     return (
@@ -99,10 +185,17 @@ const Index = () => {
 
   const hideModal = (reload = false) => {
     setModalVisible(false);
-    // 弹窗关闭后 刷新界面数据
+    // 弹窗关闭后，刷新界面数据，默认不刷新
     if (reload) init.run();
   };
 
+  const patchToolBar = () => {
+    return (
+      selectedRowKeys.length > 0 && (
+        <Space>{ActionBuilder(init?.data?.layout?.batchToolBar, actionHandler)}</Space>
+      )
+    );
+  };
   return (
     <PageContainer>
       {searchLayout()}
@@ -111,13 +204,15 @@ const Index = () => {
         <Table
           rowKey="id"
           dataSource={init?.data?.dataSource}
-          columns={ColumnBuilder(init?.data?.layout?.tableColumn, actionHandler)}
+          columns={tableColumn}
           pagination={false}
           onChange={tableChangeHandler}
+          rowSelection={rowSelection}
         />
         {afterTableLayout()}
       </Card>
       <Modal modalVisible={modalVisible} hideModal={hideModal} modalUri={modalUri} />
+      <FooterToolbar extra={patchToolBar()}></FooterToolbar>
     </PageContainer>
   );
 };

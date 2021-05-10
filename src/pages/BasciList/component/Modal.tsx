@@ -13,7 +13,7 @@ const Modal = ({
   modalUri,
 }: {
   modalVisible: boolean;
-  hideModal: (reload?:boolean) => void;
+  hideModal: (reload?: boolean) => void;
   modalUri: string;
 }) => {
   const [form] = Form.useForm();
@@ -65,9 +65,9 @@ const Modal = ({
   );
 
   const actionHandler = (action: BasicListApi.Action) => {
+    const formData = { uri: action.uri, method: action.method, ...form.getFieldsValue(true) };
     switch (action.action) {
       case 'submit':
-        const formData = { uri: action.uri, method: action.method, ...form.getFieldsValue(true) };
         request.run(formData);
         break;
       case 'cancel':
@@ -104,8 +104,8 @@ const Modal = ({
       <AntModal
         title={init?.data?.page?.title}
         visible={modalVisible}
-        onCancel={()=>{
-          return hideModal()
+        onCancel={() => {
+          return hideModal();
         }}
         footer={ActionBuilder(init?.data?.layout?.actions[0]?.data, actionHandler, request.loading)}
         // 取消点击遮罩层时弹窗关闭
