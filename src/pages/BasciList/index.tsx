@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Row, Col, Card, Pagination, Space, Modal as AntdModal, message } from 'antd';
 import { PageContainer, FooterToolbar } from '@ant-design/pro-layout';
-import { useRequest, useIntl } from 'umi';
+import { useRequest, useIntl, history } from 'umi';
 import { useSessionStorageState } from 'ahooks';
 import { ExclamationCircleOutlined } from '@ant-design/icons';
 import ActionBuilder from './builder/ActionBuilder';
@@ -32,7 +32,7 @@ const Index = () => {
     `https://public-api-v2.aspirantzhang.com/api/admins?X-API-KEY=antd${pageQuery}${sortQuery}`,
   );
 
-  const request = useRequest( 
+  const request = useRequest(
     (values: any) => {
       message.loading({
         content: 'Processing...',
@@ -75,11 +75,11 @@ const Index = () => {
     }
   }, [init?.data?.layout?.tableColumn]);
   // 弹窗有数据后才打开窗口
-  useEffect(()=>{
-    if(modalUri){
+  useEffect(() => {
+    if (modalUri) {
       setModalVisible(true);
     }
-  },[modalUri])
+  }, [modalUri]);
 
   function actionHandler(action: BasicListApi.Action, record: BasicListApi.Filed) {
     const operationName = lang.formatMessage({
@@ -96,12 +96,19 @@ const Index = () => {
           }),
         );
         break;
+      case 'page': {
+        const uri = (action.uri || '').replace(/:\w+/g, (field) => {
+          return record[field.replace(':', '')];
+        });
+        history.push(`/basic-list${uri}`);
+        break;
+      }
       case 'reload':
         init.run();
         break;
       case 'delete':
       case 'deletePermanently':
-      case 'restore':
+      case 'restore': {
         confirm({
           title: lang.formatMessage(
             {
@@ -128,6 +135,7 @@ const Index = () => {
           onCancel() {},
         });
         break;
+      }
       default:
         break;
     }
@@ -143,7 +151,7 @@ const Index = () => {
         pagination={false}
       ></Table>
     );
-  };
+  }
 
   const pagenationChangeHandler = (page: any, per_page: any) => {
     setPageQuery(`&page=${page}&per_page=${per_page}`);
@@ -232,7 +240,7 @@ const Index = () => {
           rowKey="id"
           dataSource={init?.data?.dataSource}
           columns={tableColumn}
-          loading = {init?.loading}
+          loading={init?.loading}
           pagination={false}
           onChange={tableChangeHandler}
           rowSelection={rowSelection}

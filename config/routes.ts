@@ -51,7 +51,7 @@
   {
     name: 'single-page',
     icon: 'table',
-    path: '/basic-list/api/admins/289',
+    path: '/basic-list/api/admins/*',
     component: './BasciList/component/Page',
   },
   {
