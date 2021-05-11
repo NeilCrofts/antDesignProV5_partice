@@ -17,7 +17,19 @@
 
 .formSpin{
   position:absolute;
-  left: 50%;
   top: 50%;
+  left: 50%;
   transform: translate(-50%,-50%);
+}
+
+.searchForm{
+  background-color:ghostwhite;
+  :global(.ant-form-item-label) {
+    flex: 0 0 30.33333333% !important;
+    flex-grow: 0 !important;
+    max-width: 30.33333333% !important;
+  }
+  :global(.ant-form-item) {
+    margin-bottom: 10px !important;
+  }
 }

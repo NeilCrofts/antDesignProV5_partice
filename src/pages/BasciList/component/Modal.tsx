@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { Modal as AntModal, Form, message } from 'antd';
 import { useRequest } from 'umi';
 import moment from 'moment';

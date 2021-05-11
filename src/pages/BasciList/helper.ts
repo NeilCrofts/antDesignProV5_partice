@@ -4,9 +4,18 @@ import moment from 'moment'
 export const submitFieldsAdaptor = (formValues: any) => {
   const result = formValues;
   Object.keys(formValues).forEach((key) => {
-    // 判断是否是monent对象
-    if (moment.isMoment(formValues[key])) {
+     // 判断是否是monent对象
+     if (moment.isMoment(formValues[key])) {
       result[key] = moment(formValues[key]).format()
+    }
+    // 若遍历的值也是数组
+    if (Array.isArray(formValues[key])) {
+       result[key] = formValues[key].map((innerValue: any) => {
+        if (moment.isMoment(innerValue)) {
+          return moment(innerValue).format()
+        }
+          return innerValue;
+      })
     }
   })
   return result

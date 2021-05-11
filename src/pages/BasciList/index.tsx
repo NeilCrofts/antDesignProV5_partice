@@ -1,13 +1,29 @@
-import React, { useState, useEffect } from 'react';
-import { Table, Row, Col, Card, Pagination, Space, Modal as AntdModal, message } from 'antd';
+import { useState, useEffect } from 'react';
+import {
+  Table,
+  Row,
+  Col,
+  Card,
+  Pagination,
+  Space,
+  Modal as AntdModal,
+  message,
+  Tooltip,
+  Button,
+  Form,
+} from 'antd';
 import { PageContainer, FooterToolbar } from '@ant-design/pro-layout';
 import { useRequest, useIntl, history } from 'umi';
 import { useSessionStorageState } from 'ahooks';
-import { ExclamationCircleOutlined } from '@ant-design/icons';
+import { ExclamationCircleOutlined, SearchOutlined } from '@ant-design/icons';
+import { stringify } from 'query-string';
+import QueueAnim from 'rc-queue-anim';
 import ActionBuilder from './builder/ActionBuilder';
+import SearchBuilder from './builder/SearchBuilder';
 import ColumnBuilder from './builder/ColumnBuilder';
 import Modal from './component/Modal';
-import style from './index.less';
+import styles from './index.less';
+import { submitFieldsAdaptor } from './helper';
 
 const Index = () => {
   const [pageQuery, setPageQuery] = useState(''); // 设置第几页and每页多少项
@@ -19,6 +35,7 @@ const Index = () => {
   const [modalUri, setModalUri] = useState('');
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
   const [selectedRows, setSelectedRows] = useState([]);
+  const [searchVisible, setSearchVisible] = useState(false);
   const { confirm } = AntdModal;
   // 将列表存为全局
   const [tableColumn, setTableColumn] = useSessionStorageState<BasicListApi.Filed[]>(
@@ -26,11 +43,18 @@ const Index = () => {
     [],
   );
   const lang = useIntl();
+  const [searchForm] = Form.useForm();
 
-  // useRequest 获取 列表(admit list) 数据
-  const init = useRequest<{ data: BasicListApi.ListData }>(
-    `https://public-api-v2.aspirantzhang.com/api/admins?X-API-KEY=antd${pageQuery}${sortQuery}`,
-  );
+  // useRequest 获取 列表(admit list)数据 + searchLayout查询数据
+  const init = useRequest<{ data: BasicListApi.ListData }>((values) => {
+    return {
+      url: `https://public-api-v2.aspirantzhang.com/api/admins?X-API-KEY=antd${pageQuery}${sortQuery}`,
+      params: values,
+      paramsSerializer: (params: any) => {
+        return stringify(params, { arrayFormat: 'comma', skipEmptyString: true, skipNull: true });
+      },
+    };
+  });
 
   const request = useRequest(
     (values: any) => {
@@ -194,16 +218,61 @@ const Index = () => {
     if (reload) init.run();
   };
 
-  // 页面头部
-  const searchLayout = () => {};
+  const onFinish = (value: any) => {
+    init.run(submitFieldsAdaptor(value));
+    console.log(submitFieldsAdaptor(value));
+  };
+  // 页面头部 搜索栏
+  const searchLayout = () => {
+    return (
+      <QueueAnim type = 'top'>
+        {searchVisible && (
+          <Card className={styles.searchForm} key="searchForm">
+            <Form onFinish={onFinish} form={searchForm}>
+              <Row gutter={24}>{SearchBuilder(init?.data?.layout.tableColumn)}</Row>
+              <Row justify="end">
+                <Col>
+                  <Space>
+                    <Button type="primary" htmlType="submit">
+                      submit
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        init.run();
+                        searchForm.resetFields();
+                      }}
+                    >
+                      clear
+                    </Button>
+                  </Space>
+                </Col>
+              </Row>
+            </Form>
+          </Card>
+        )}
+      </QueueAnim>
+    );
+  };
 
   // 右上角按钮
   const beforeTableLayout = () => {
     return (
       <Row>
         <Col span={12}>...</Col>
-        <Col span={12} className={style.tableToobar}>
-          <Space>{ActionBuilder(init?.data?.layout?.tableToolBar, actionHandler)}</Space>
+        <Col span={12} className={styles.tableToobar}>
+          <Space>
+            <Tooltip title="search">
+              <Button
+                shape="circle"
+                icon={<SearchOutlined />}
+                type={searchVisible ? 'primary' : 'default'}
+                onClick={() => {
+                  setSearchVisible(!searchVisible);
+                }}
+              />
+            </Tooltip>
+            {ActionBuilder(init?.data?.layout?.tableToolBar, actionHandler)}
+          </Space>
         </Col>
       </Row>
     );
@@ -214,7 +283,7 @@ const Index = () => {
     return (
       <Row>
         <Col span={12}>...</Col>
-        <Col span={12} className={style.tableToobar}>
+        <Col span={12} className={styles.tableToobar}>
           <Pagination
             total={init?.data?.meta?.total || 0}
             current={init?.data?.meta?.page || 1}

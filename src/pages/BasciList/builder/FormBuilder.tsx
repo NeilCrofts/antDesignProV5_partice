@@ -1,16 +1,19 @@
-import React from 'react'
-import { Input, Form,DatePicker,TreeSelect,Switch} from 'antd'
+import { Input, Form,DatePicker,TreeSelect,Switch,InputNumber,Radio} from 'antd'
 
 // 该组件仅负责渲染展示
 const FormBuilder = (data: BasicListApi.Filed[]|undefined) => {
+
   return (data || []).map((field) => {
+    const basicAttr = {
+      label: field.title,
+      name: field.key,
+      key: field.key,
+    }
     switch(field.type){
       case 'text':
         return (
           <Form.Item
-            label={field.title}
-            name={field.key}
-            key={field.key}
+            {...basicAttr}
           >
             <Input disabled={field.disabled} />
           </Form.Item>
@@ -18,9 +21,7 @@ const FormBuilder = (data: BasicListApi.Filed[]|undefined) => {
       case 'datetime':
         return (
           <Form.Item
-            label={field.title}
-            name={field.key}
-            key={field.key}
+           {...basicAttr}
           >
             <DatePicker showTime disabled={field.disabled} />
           </Form.Item>
@@ -28,9 +29,7 @@ const FormBuilder = (data: BasicListApi.Filed[]|undefined) => {
       case 'tree':
         return (
           <Form.Item
-            label={field.title}
-            name={field.key}
-            key={field.key}
+            {...basicAttr}
           >
             <TreeSelect treeData={field.data} disabled={field.disabled} treeCheckable />
           </Form.Item>
@@ -38,14 +37,48 @@ const FormBuilder = (data: BasicListApi.Filed[]|undefined) => {
       case 'switch':
         return (
           <Form.Item
-            label={field.title}
-            name={field.key}
-            key={field.key}
+            {...basicAttr}
             valuePropName='checked'
           >
           <Switch disabled={field.disabled} />
           </Form.Item>
       )
+      case 'number':
+        return (
+          <Form.Item {...basicAttr}>
+            <InputNumber disabled={field.disabled} />
+          </Form.Item>
+        );
+      case 'textarea':
+        return (
+          <Form.Item {...basicAttr}>
+            <Input.TextArea disabled={field.disabled} />
+          </Form.Item>
+        );
+      case 'radio':
+        return (
+          <Form.Item {...basicAttr}>
+            <Radio.Group buttonStyle="solid" defaultValue={field.data[0]?.value}>
+              {(field.data || []).map((item: any) => {
+                return <Radio.Button value={item.value}>{item.name}</Radio.Button>;
+              })}
+            </Radio.Group>
+          </Form.Item>
+        );
+      case 'parent':
+        return (
+          <Form.Item {...basicAttr}>
+            <TreeSelect
+              showSearch
+              style={{ width: '100%' }}
+              dropdownStyle={{ maxHeight: 600, overflow: 'auto' }}
+              treeData={field.data}
+              placeholder="Please select"
+              treeDefaultExpandAll
+              allowClear
+            />
+          </Form.Item>
+        );
       default:
         return null;
     }
