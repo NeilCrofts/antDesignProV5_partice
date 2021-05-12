@@ -13,8 +13,8 @@ import {
   Form,
 } from 'antd';
 import { PageContainer, FooterToolbar } from '@ant-design/pro-layout';
-import { useRequest, useIntl, history } from 'umi';
-import { useSessionStorageState } from 'ahooks';
+import { useRequest, useIntl, history, useLocation } from 'umi';
+import { useSessionStorageState, useUpdateEffect} from 'ahooks';
 import { ExclamationCircleOutlined, SearchOutlined } from '@ant-design/icons';
 import { stringify } from 'query-string';
 import QueueAnim from 'rc-queue-anim';
@@ -44,11 +44,15 @@ const Index = () => {
   );
   const lang = useIntl();
   const [searchForm] = Form.useForm();
+  const location = useLocation();
 
   // useRequest 获取 列表(admit list)数据 + searchLayout查询数据
   const init = useRequest<{ data: BasicListApi.ListData }>((values) => {
     return {
-      url: `https://public-api-v2.aspirantzhang.com/api/admins?X-API-KEY=antd${pageQuery}${sortQuery}`,
+      url: `https://public-api-v2.aspirantzhang.com${location.pathname.replace(
+        '/basic-list',
+        '',
+      )}?X-API-KEY=antd${pageQuery}${sortQuery}`,
       params: values,
       paramsSerializer: (params: any) => {
         return stringify(params, { arrayFormat: 'comma', skipEmptyString: true, skipNull: true });
@@ -89,10 +93,10 @@ const Index = () => {
   );
 
   // 当page||per_page变量改变后，运行init.run()，解决init.run会异步执行的问题
-  useEffect(() => {
+  useUpdateEffect(() => {
     init.run();
-  }, [pageQuery, sortQuery]);
-
+  }, [pageQuery, sortQuery, location.pathname]);
+  // 渲染列表
   useEffect(() => {
     if (init?.data?.layout?.tableColumn) {
       setTableColumn(ColumnBuilder(init.data.layout.tableColumn, actionHandler));
@@ -225,7 +229,7 @@ const Index = () => {
   // 页面头部 搜索栏
   const searchLayout = () => {
     return (
-      <QueueAnim type = 'top'>
+      <QueueAnim type="top">
         {searchVisible && (
           <Card className={styles.searchForm} key="searchForm">
             <Form onFinish={onFinish} form={searchForm}>

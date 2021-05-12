@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { Col, Row, Tabs, Form, message, Card, Space, Spin } from 'antd';
 import { PageContainer, FooterToolbar } from '@ant-design/pro-layout';
 import { useLocation, useRequest, history } from 'umi';
@@ -45,6 +45,7 @@ const Page = () => {
     },
     {
       manual: true,
+      throttleInterval: 1000,
       onSuccess: (data) => {
         message.success({
           content: data.message,

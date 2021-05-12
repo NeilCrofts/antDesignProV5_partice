@@ -43,17 +43,16 @@
     component: './TableList',
   },
   {
-    name: 'basic-list',
-    icon: 'table',
-    path: '/basic-list',
-    component: './BasciList',
-  },
-  {
-    name: 'single-page',
-    icon: 'table',
-    path: '/basic-list/api/admins/*',
+    path: '/basic-list/api/*/*',
     component: './BasciList/component/Page',
   },
+  {
+    name: 'basic-list',
+    icon: 'table',
+    path: '/basic-list/*',
+    component: './BasciList',
+  },
+
   {
     path: '/',
     redirect: '/welcome',

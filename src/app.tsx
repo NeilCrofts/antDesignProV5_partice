@@ -1,16 +1,17 @@
-import type { Settings as LayoutSettings } from '@ant-design/pro-layout';
+import type { Settings as LayoutSettings , MenuDataItem} from '@ant-design/pro-layout';
 import { PageLoading } from '@ant-design/pro-layout';
 import { message } from 'antd';
 import type { RequestConfig, RunTimeLayoutConfig } from 'umi';
 // import { getIntl, getLocale, history, Link } from 'umi';
-import { history, Link } from 'umi';
+import { history } from 'umi';
 import RightContent from '@/components/RightContent';
 import Footer from '@/components/Footer';
 import type { ResponseError } from 'umi-request';
-import { currentUser as queryCurrentUser } from './services/ant-design-pro/api';
-import { BookOutlined, LinkOutlined } from '@ant-design/icons';
+import {
+  currentUser as queryCurrentUser,
+  currentMenu as queryCurrentMenu,
+} from './services/ant-design-pro/api';
 
-const isDev = process.env.NODE_ENV === 'development';
 const loginPath = '/user/login';
 
 /** 获取用户信息比较慢的时候会展示一个 loading */
@@ -24,6 +25,7 @@ export const initialStateConfig = {
 export async function getInitialState(): Promise<{
   settings?: Partial<LayoutSettings>;
   currentUser?: API.CurrentUser;
+  currentMenu?: MenuDataItem[];
   fetchUserInfo?: () => Promise<API.CurrentUser | undefined>;
 }> {
   const fetchUserInfo = async () => {
@@ -35,12 +37,23 @@ export async function getInitialState(): Promise<{
     }
     return undefined;
   };
+  const fetchMenu = async () => {
+    try {
+      const currentMenu = await queryCurrentMenu();
+      return currentMenu;
+    } catch (error) {
+      message.error('Get menu data failed.', 10);
+    }
+    return undefined;
+  };
   // 如果是登录页面，不执行
   if (history.location.pathname !== loginPath) {
     const currentUser = await fetchUserInfo();
+    const currentMenu = await fetchMenu();
     return {
       fetchUserInfo,
       currentUser,
+      currentMenu,
       settings: {},
     };
   }
@@ -130,7 +143,6 @@ export const request: RequestConfig = {
         break;
     }
     throw error;
-
   },
 };
 
@@ -150,21 +162,15 @@ export const layout: RunTimeLayoutConfig = ({ initialState }) => {
         history.push(loginPath);
       }
     },
-    links: isDev
-      ? [
-          <Link to="/umi/plugin/openapi" target="_blank">
-            <LinkOutlined />
-            <span>openAPI 文档</span>
-          </Link>,
-          <Link to="/~docs">
-            <BookOutlined />
-            <span>业务组件文档</span>
-          </Link>,
-        ]
-      : [],
+
     menuHeaderRender: undefined,
+    menuDataRender: () => {
+      return initialState?.currentMenu||[];
+    },
     // 自定义 403 页面
     // unAccessible: <div>unAccessible</div>,
+    // 展开即是defaultSettings.ts的内容
     ...initialState?.settings,
+    // iconfontUrl: '//at.alicdn.com/t/font_2112134_uyx998l7ji.js',
   };
 };

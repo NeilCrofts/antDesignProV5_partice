@@ -51,6 +51,7 @@ const Modal = ({
     },
     {
       manual: true,
+      throttleInterval: 1000,
       onSuccess: (data) => {
         message.success({
           content: data.message,
