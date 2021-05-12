@@ -14,7 +14,7 @@ import {
 } from 'antd';
 import { PageContainer, FooterToolbar } from '@ant-design/pro-layout';
 import { useRequest, useIntl, history, useLocation } from 'umi';
-import { useSessionStorageState, useUpdateEffect } from 'ahooks';
+import { useUpdateEffect } from 'ahooks';
 import { ExclamationCircleOutlined, SearchOutlined } from '@ant-design/icons';
 import { stringify } from 'query-string';
 import QueueAnim from 'rc-queue-anim';
@@ -37,11 +37,7 @@ const Index = () => {
   const [selectedRows, setSelectedRows] = useState([]);
   const [searchVisible, setSearchVisible] = useState(false);
   const { confirm } = AntdModal;
-  // 将列表存为全局
-  const [tableColumn, setTableColumn] = useSessionStorageState<BasicListApi.Filed[]>(
-    'basicListTableColumn',
-    [],
-  );
+
   const lang = useIntl();
   const [searchForm] = Form.useForm();
   const location = useLocation();
@@ -49,6 +45,12 @@ const Index = () => {
   // useRequest 获取 列表(admit list)数据 + searchLayout查询数据
   const init = useRequest<{ data: BasicListApi.ListData }>(
     (values) => {
+      // 解决在其他页码的情况下点击不同菜单时 会传递页码信息且页码不刷新回第一页 的问题
+      if(values === true){
+        return {
+          url: `${location.pathname.replace('/basic-list', '')}`,
+        };
+      }
       return {
         url: `${location.pathname.replace('/basic-list', '')}?${pageQuery}${sortQuery}`,
         params: values,
@@ -101,13 +103,13 @@ const Index = () => {
   // 当page||per_page变量改变后，运行init.run()，解决init.run会异步执行的问题
   useUpdateEffect(() => {
     init.run();
-  }, [pageQuery, sortQuery, location.pathname]);
-  // 渲染列表
-  useEffect(() => {
-    if (init?.data?.layout?.tableColumn) {
-      setTableColumn(ColumnBuilder(init.data.layout.tableColumn, actionHandler));
-    }
-  }, [init?.data?.layout?.tableColumn]);
+  }, [pageQuery, sortQuery]);
+
+  useUpdateEffect(() => {
+    init.run(true);
+  }, [location.pathname]);
+
+
   // 弹窗有数据后才打开窗口
   useEffect(() => {
     if (modalUri) {
@@ -176,11 +178,13 @@ const Index = () => {
   }
 
   function batchOverView(dataSourse: BasicListApi.Filed[]) {
+    // 删除栏获取表单数据
+    const tableColumns = ColumnBuilder(init?.data?.layout?.tableColumn, actionHandler);
     return (
       <Table
         size="small"
         rowKey="id"
-        columns={tableColumn ? [tableColumn[0] || {}, tableColumn[1] || {}] : []}
+        columns={ [tableColumns[0] || {}, tableColumns[1] || {}]}
         dataSource={dataSourse}
         pagination={false}
       ></Table>
@@ -323,7 +327,7 @@ const Index = () => {
         <Table
           rowKey="id"
           dataSource={init?.data?.dataSource}
-          columns={tableColumn}
+          columns={ColumnBuilder(init?.data?.layout?.tableColumn, actionHandler)}
           loading={init?.loading}
           pagination={false}
           onChange={tableChangeHandler}
