@@ -6,7 +6,7 @@ const { Option } = Select;
 // 该组件仅负责渲染展示
 const FormBuilder = (data: BasicListApi.Filed[] | undefined) => {
   const idInput = (
-    <Col sm={6}>
+    <Col sm={6} key="id">
       <Form.Item label="ID" name="id" key="id">
         <InputNumber style={{ width: '100%' }} />
       </Form.Item>
@@ -21,7 +21,7 @@ const FormBuilder = (data: BasicListApi.Filed[] | undefined) => {
     switch (field.type) {
       case 'text':
         return (
-          <Col sm={6}>
+          <Col sm={6} key={field.key}>
             <Form.Item {...basicAttr}>
               <Input disabled={field.disabled} />
             </Form.Item>
@@ -29,7 +29,7 @@ const FormBuilder = (data: BasicListApi.Filed[] | undefined) => {
         );
       case 'datetime':
         return (
-          <Col sm={12}>
+          <Col sm={12} key={field.key}>
             <Form.Item {...basicAttr}>
               <RangePicker
                 showTime
@@ -50,7 +50,7 @@ const FormBuilder = (data: BasicListApi.Filed[] | undefined) => {
         );
       case 'tree':
         return (
-          <Col sm={6}>
+          <Col sm={6} key={field.key}>
             <Form.Item {...basicAttr}>
               <TreeSelect treeData={field.data} disabled={field.disabled} treeCheckable />
             </Form.Item>
@@ -59,11 +59,15 @@ const FormBuilder = (data: BasicListApi.Filed[] | undefined) => {
       case 'switch':
       case 'select':
         return (
-          <Col sm={6}>
+          <Col sm={6} key={field.key}>
             <Form.Item {...basicAttr} valuePropName="checked">
               <Select>
                 {(field.data || []).map((option: any) => {
-                  return <Option value={option.value}>{option.title}</Option>;
+                  return (
+                    <Option value={option.value} key={option.value}>
+                      {option.title}
+                    </Option>
+                  );
                 })}
               </Select>
             </Form.Item>

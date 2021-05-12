@@ -15,7 +15,7 @@ const Page = () => {
   const [form] = Form.useForm();
 
   const init = useRequest(
-    `https://public-api-v2.aspirantzhang.com/${location.pathname.replace(
+    `/${location.pathname.replace(
       '/basic-list',
       '',
     )}?X-API-KEY=antd`,
@@ -35,7 +35,7 @@ const Page = () => {
       });
       const { uri, method, ...formValues } = values;
       return {
-        url: `https://public-api-v2.aspirantzhang.com${uri}`,
+        url: `${uri}`,
         method,
         data: {
           ...submitFieldsAdaptor(formValues),

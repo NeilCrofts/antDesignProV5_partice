@@ -20,7 +20,7 @@ const Modal = ({
 
   // 向后台请求 弹窗内容
   const init = useRequest<{ data: BasicListApi.PageData }>(
-    `https://public-api-v2.aspirantzhang.com${modalUri}?X-API-KEY=antd`,
+    `${modalUri}`,
     {
       // 手动触发，init.run()时才执行
       manual: true,
@@ -40,7 +40,7 @@ const Modal = ({
       });
       const { uri, method, ...formValues } = values;
       return {
-        url: `https://public-api-v2.aspirantzhang.com${uri}`,
+        url: `${uri}`,
         method,
         // body: JSON.stringify(formValues),
         data: {

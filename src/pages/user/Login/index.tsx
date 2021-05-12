@@ -48,11 +48,14 @@ const Login: React.FC = () => {
   const intl = useIntl();
 
   const fetchUserInfo = async () => {
+    // initialState?.fetchUserInfo?.() ：函数fetchUserInfo可能为underfied表示方式
     const userInfo = await initialState?.fetchUserInfo?.();
+    const userMenu = await initialState?.fetchMenu?.();
     if (userInfo) {
       setInitialState({
         ...initialState,
         currentUser: userInfo,
+        currentMenu: userMenu,
       });
     }
   };
@@ -62,7 +65,7 @@ const Login: React.FC = () => {
     try {
       // 登录
       const msg = await login({ ...values, type });
-      if (msg.status === 'ok') {
+      if (msg.success === true) {
         const defaultloginSuccessMessage = intl.formatMessage({
           id: 'pages.login.success',
           defaultMessage: '登录成功！',
