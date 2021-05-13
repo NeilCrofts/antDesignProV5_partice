@@ -52,7 +52,12 @@
     path: '/basic-list/*',
     component: './BasciList',
   },
-
+  {
+    name: 'model-design',
+    icon: 'table',
+    path: '/model-design/',
+    component: './ModelDesign',
+  },
   {
     path: '/',
     redirect: '/welcome',
