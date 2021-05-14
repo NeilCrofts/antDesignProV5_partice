@@ -14,11 +14,11 @@ const Page = () => {
   const location = useLocation();
   const [form] = Form.useForm();
 
-  const init = useRequest(
-    `/${location.pathname.replace(
+  const init = useRequest<{ data: BasicListApi.PageData }>(
+    `${location.pathname.replace(
       '/basic-list',
       '',
-    )}?X-API-KEY=antd`,
+    )}`,
     {
       onError: () => {
         history.goBack();
@@ -39,7 +39,6 @@ const Page = () => {
         method,
         data: {
           ...submitFieldsAdaptor(formValues),
-          'X-API-KEY': 'antd',
         },
       };
     },
@@ -53,7 +52,7 @@ const Page = () => {
         });
         history.goBack();
       },
-      formatResult: (res) => {
+      formatResult: (res:any) => {
         return res;
       },
     },

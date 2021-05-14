@@ -55,7 +55,7 @@
   {
     name: 'model-design',
     icon: 'table',
-    path: '/model-design/',
+    path: '/model-design/*',
     component: './ModelDesign',
   },
   {

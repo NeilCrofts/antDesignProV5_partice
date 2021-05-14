@@ -125,6 +125,7 @@ const Index = () => {
       // 点击add添加按钮 显示弹窗和设置请求地址
       case 'modal':
         setModalUri(
+          // 将:id 替换为对应id号码
           (action.uri || '').replace(/:\w+/g, (field) => {
             // field 为正则查询到的 :id
             // 取出record 中的 id 属性的值
@@ -137,8 +138,15 @@ const Index = () => {
           return record[field.replace(':', '')];
         });
         history.push(`/basic-list${uri}`);
-        break;
       }
+      break;
+      case 'modelDesign': {
+        const uri = (action.uri || '').replace(/:\w+/g, (field) => {
+          return record[field.replace(':', '')];
+        });
+        history.push(`/model-design${uri}`);
+      }
+      break;
       case 'reload':
         init.run();
         break;
