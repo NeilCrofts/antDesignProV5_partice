@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState,useEffect } from 'react';
 import { Button } from 'antd';
 import { PageContainer, FooterToolbar } from '@ant-design/pro-layout';
 import {
@@ -10,7 +10,8 @@ import {
 } from '@formily/antd';
 import { Input, FormCard, ArrayTable, Checkbox, Select } from '@formily/antd-components';
 import 'antd/dist/antd.css';
-import { IFormEffect, IFieldState } from '@formily/react/lib'; // interface
+import { useSetState } from 'ahooks';
+import type { IFormEffect, IFieldState } from '@formily/react/lib'; // interface
 import * as enums from './enums';
 import { schemaExample } from './initialValues';
 import styles from './style.less';
@@ -27,8 +28,20 @@ const Index = () => {
 
   const [fieldPath, setFieldPath] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
+  const [modalState, setModalState] = useSetState({
+    type: '',
+    values: {},
+  });
 
-  const onModelDesign: IFormEffect = (_, { setFieldState /* setFieldValue */ }) => {
+  useEffect(() => {
+    if (modalState.type) {
+      setModalVisible(true);
+    }
+  }, [modalState.type]);
+
+
+
+  const onModelDesign: IFormEffect = (_, { setFieldState /* setFieldValue */ ,getFieldValue}) => {
     // setFieldState能改变所有State
     // 数据改变时调用，参数是path，.subscribe参数是自身数据State
     onFieldValueChange$('fieldsCard.fields.*.type').subscribe(({ value, path }) => {
@@ -52,26 +65,42 @@ const Index = () => {
       if (value === 'switch' || value === 'radio') {
         setFieldState(path.replace('type', 'data'), (state: IFieldState) => {
           state.editable = true;
+          state.required = true;
         });
       } else {
         setFieldState(path.replace('type', 'data'), (state: IFieldState) => {
           state.editable = false;
+          state.required = false;
         });
       }
     });
-    // active能判断按钮是否被点击
-    onFieldChange$('fieldsCard.fields.*.data').subscribe(({ path, active }) => {
+    // 监听按钮Data  active能判断按钮是否被点击
+    onFieldChange$('fieldsCard.fields.*.data').subscribe(({ path, active,value }) => {
       if (active === true) {
         setModalVisible(true);
         setFieldPath(path as string);
+
+        setModalState({
+          values: value,
+          type: getFieldValue(path?.replace('data', 'type')),
+        });
       }
+    });
+    // 改变Basic的Route-Name替换uri
+    onFieldValueChange$('basicCard.routeName').subscribe(({ value }) => {
+      // *.*.*.uri 所有有uri的path
+      setFieldState('*.*.*.uri', (state: IFieldState) => {
+        state.value = state.value?.replace('admins', value);
+      });
     });
   };
 
+  // Model点击提交
   const modalSubmitHandler = (values: any) => {
     setModalVisible(false);
     // 将Modal选项的数据设置为Data自己的数据
-    modelDesignAction.setFieldValue(fieldPath, values);
+    modelDesignAction.setFieldValue(fieldPath, values.data);
+    setModalState({ type: '', values: {} });
   };
 
   return (
@@ -196,8 +225,10 @@ const Index = () => {
         modalVisible={modalVisible}
         hideModal={() => {
           setModalVisible(false);
+          setModalState({ type: '', values: {} });
         }}
         modalSubmitHandler={modalSubmitHandler}
+        modalState={modalState}
       />
     </PageContainer>
   );
